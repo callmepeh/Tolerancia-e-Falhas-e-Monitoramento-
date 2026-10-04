@@ -1,0 +1,41 @@
+# ============================================================
+# Gerador de carga para o Experimento 3 (acionar o HPA)
+#
+# Cria um Deployment com 1 réplica que fica em loop batendo
+# continuamente em /busy do Service, forçando a CPU dos pods
+# da aplicação a subir e o HPA a reagir.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+  labels:
+    app: load-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      containers:
+        - name: busybox
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "load-generator iniciado: atacando http://meteo-api/busy?sec=240&spin=1 em loop";
+              while true; do
+                wget -q -O - "http://meteo-api/busy?sec=240&spin=1" >/dev/null 2>&1 || true;
+                sleep 2;
+              done
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi

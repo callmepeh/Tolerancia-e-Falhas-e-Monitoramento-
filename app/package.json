@@ -1,0 +1,12 @@
+{
+  "name": "meteo-api",
+  "version": "1.0.0",
+  "description": "Serviço de previsão do tempo para a Atividade 4 de Sistemas Distribuídos (Kubernetes + Prometheus)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "prom-client": "^15.1.0"
+  }
+}

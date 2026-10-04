@@ -1,0 +1,63 @@
+# ============================================================
+# Deployment da aplicação meteo-api
+# Atividade 4 - Sistemas Distribuídos
+#
+# Requisitos atendidos:
+#   - 2 réplicas iniciais
+#   - Deployment
+#   - requests/limits de CPU (obrigatório para o HPA funcionar)
+#   - livenessProbe (auto-recuperação em caso de falha do processo)
+#   - readinessProbe (sem downtime durante reinicializações)
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meteo-api
+  labels:
+    app: meteo-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: meteo-api
+  template:
+    metadata:
+      labels:
+        app: meteo-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: meteo-api
+          image: meteo-api:1.0
+          imagePullPolicy: IfNotPresent   # imagem construída localmente no Minikube
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 250m
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 2
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          env:
+            - name: APP_VERSION
+              value: "1.0.0"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
